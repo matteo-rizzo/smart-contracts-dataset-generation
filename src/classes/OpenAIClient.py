@@ -1,9 +1,12 @@
 import logging
 import os
 
-import openai
+from openai import OpenAI
+
 from dotenv import load_dotenv
 
+# Global constant for the model to use
+OPENAI_MODEL = "gpt-4o"
 
 class OpenAIClient:
     """
@@ -21,12 +24,14 @@ class OpenAIClient:
         if not self.api_key:
             raise ValueError("OpenAI API key not found. Please set OPENAI_API_KEY in your .env file.")
 
-        openai.api_key = self.api_key
-        self.logger = logging.getLogger("rich")
+        self.client = OpenAI(api_key=self.api_key)
+
+        self.logger = logging.getLogger("OpenAIClient")
+        logging.basicConfig(level=logging.INFO)
 
     def get_gpt_response(self, prompt: str) -> str:
         """
-        Sends a prompt to OpenAI's GPT API and returns the response.
+        Sends a prompt to OpenAI's GPT-4-turbo API and returns the response.
 
         :param prompt: The prompt to send to GPT.
         :type prompt: str
@@ -35,13 +40,14 @@ class OpenAIClient:
         :raises Exception: If an error occurs while communicating with the OpenAI API.
         """
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            self.logger.info(f"Sending request to OpenAI model: {OPENAI_MODEL}")
+            response = self.client.chat.completions.create(
+                model=OPENAI_MODEL,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=1500,
                 temperature=0  # For deterministic results
             )
-            return response['choices'][0]['message']['content']
+            self.logger.info(f"Received response from OpenAI model: {OPENAI_MODEL}")
+            return response.choices[0].message.content
         except Exception as e:
-            self.logger.error(f"[bold red]Error getting response from OpenAI API:[/bold red] {e}")
+            self.logger.error(f"Error getting response from OpenAI API: {e}")
             raise e
