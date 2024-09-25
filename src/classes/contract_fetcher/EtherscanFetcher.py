@@ -1,18 +1,12 @@
 import json
-import logging
 import os
 from typing import List, Optional
 
 import requests
-from rich.console import Console
 from rich.progress import track
 
-from src.classes.contract_fetcher.Config import Config
+from src.classes.config.EtherscanConfig import EtherscanConfig
 from src.classes.contract_fetcher.RateLimiter import RateLimiter
-
-# Initialize rich console for better logging
-console = Console()
-logging.basicConfig(level=logging.INFO)
 
 
 class EtherscanFetcher:
@@ -20,21 +14,24 @@ class EtherscanFetcher:
     A class for fetching contract data and logs from Etherscan using its API.
     """
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: EtherscanConfig) -> None:
         """
-        Initializes the EtherscanFetcher with API key and directory setup.
+        Initializes the EtherscanFetcher with API key, directory setup, and rate limiter.
 
-        :param config: The configuration object containing API key, save directory, and rate limit.
-        :type config: Config
+        :param config: The configuration object containing API key, save directory, rate limit, and retry settings.
+        :type config: EtherscanConfig
         """
-        self.api_key = config.API_KEY
-        self.save_dir = config.SAVE_DIR
-        self.rate_limiter = RateLimiter(config.RATE_LIMIT)
+        self.api_key = config.api_key
+        self.save_dir = config.save_dir
+        self.retry_limit = config.retry_limit
+        self.rate_limiter = RateLimiter(config.rate_limit)
+        self.console = config.console  # Use Rich console from the config
+        self.logger = config.logger
 
         # Create the directory if it doesn't exist
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
-        console.log(f"[green]Initialized EtherscanFetcher with save directory: {self.save_dir}[/green]")
+        self.console.log(f"[green]Initialized EtherscanFetcher with save directory: {self.save_dir}[/green]")
 
     def fetch_logs(self, contract_address: str, event_signature: str, retry_count: int = 0) -> List[str]:
         """
@@ -59,14 +56,14 @@ class EtherscanFetcher:
             if data['status'] == '1':
                 return [log['data'] for log in data['result']]
             else:
-                console.log(f"[bold red]Error fetching logs for {contract_address}: {data['message']}[/bold red]")
+                self.console.log(f"[bold red]Error fetching logs for {contract_address}: {data['message']}[/bold red]")
                 return []
         except requests.RequestException as e:
-            if retry_count < Config.RETRY_LIMIT:
-                console.log(f"[yellow]Retrying... ({retry_count + 1}/{Config.RETRY_LIMIT})[/yellow]")
+            if retry_count < self.retry_limit:
+                self.console.log(f"[yellow]Retrying... ({retry_count + 1}/{self.retry_limit})[/yellow]")
                 return self.fetch_logs(contract_address, event_signature, retry_count + 1)
-            console.log(
-                f"[bold red]Network error while fetching logs for {contract_address} after {Config.RETRY_LIMIT} retries: {e}[/bold red]")
+            self.console.log(
+                f"[bold red]Network error while fetching logs for {contract_address} after {self.retry_limit} retries: {e}[/bold red]")
             return []
 
     @staticmethod
@@ -95,24 +92,25 @@ class EtherscanFetcher:
         try:
             self.rate_limiter.rate_limit()
             url = f"https://api.etherscan.io/api?module=contract&action=getsourcecode&address={contract_address}&apikey={self.api_key}"
-            console.log(f"[cyan]Fetching contract from Etherscan for address: {contract_address}[/cyan]")
+            self.console.log(f"[cyan]Fetching contract from Etherscan for address: {contract_address}[/cyan]")
             response = requests.get(url)
             self.rate_limiter.increment_request_count()
             data = response.json()
 
             if data['status'] == '1' and data['result'][0]['SourceCode']:
-                console.log(f"[green]Contract verified and source code found for address: {contract_address}[/green]")
+                self.console.log(
+                    f"[green]Contract verified and source code found for address: {contract_address}[/green]")
                 return data['result'][0]
             else:
-                console.log(
+                self.console.log(
                     f"[bold red]Error fetching or contract not verified for {contract_address}[/bold red]: {data['message']}")
                 return None
         except requests.RequestException as e:
-            if retry_count < Config.RETRY_LIMIT:
-                console.log(f"[yellow]Retrying... ({retry_count + 1}/{Config.RETRY_LIMIT})[/yellow]")
+            if retry_count < self.retry_limit:
+                self.console.log(f"[yellow]Retrying... ({retry_count + 1}/{self.retry_limit})[/yellow]")
                 return self.fetch_verified_contract(contract_address, retry_count + 1)
-            console.log(
-                f"[bold red]Network error while fetching contract {contract_address} after {Config.RETRY_LIMIT} retries: {e}[/bold red]")
+            self.console.log(
+                f"[bold red]Network error while fetching contract {contract_address} after {self.retry_limit} retries: {e}[/bold red]")
             return None
 
     def save_contract_as_sol(self, contract_address: str, contract_data: dict) -> None:
@@ -139,16 +137,16 @@ class EtherscanFetcher:
                     file_path = os.path.join(self.save_dir, f"{contract_address}_{file_name}.sol")
                     with open(file_path, 'w', encoding='utf-8') as file:
                         file.write(file_content['content'])
-                    console.log(f"[green]Saved multi-file contract: {file_path}[/green]")
+                    self.console.log(f"[green]Saved multi-file contract: {file_path}[/green]")
             else:
                 # Handle single-file contracts
                 file_path = os.path.join(self.save_dir, f"{contract_address}_{contract_name}.sol")
                 with open(file_path, 'w', encoding='utf-8') as file:
                     file.write(source_code)
-                console.log(f"[green]Saved single file: {file_path}[/green]")
+                self.console.log(f"[green]Saved single file: {file_path}[/green]")
 
         except (json.JSONDecodeError, OSError) as e:
-            console.log(f"[bold red]Error saving contract {contract_address} as a .sol file:[/bold red] {e}")
+            self.console.log(f"[bold red]Error saving contract {contract_address} as a .sol file:[/bold red] {e}")
 
     def fetch_and_save_verified_contracts(self, contract_addresses: List[str],
                                           target_verified_count: int = 1000) -> int:
@@ -166,19 +164,19 @@ class EtherscanFetcher:
 
         for idx, address in track(enumerate(contract_addresses), description="Checking contracts..."):
             if verified_contracts_saved >= target_verified_count:
-                console.log(f"[bold green]Target of {target_verified_count} contracts reached![/bold green]")
+                self.console.log(f"[bold green]Target of {target_verified_count} contracts reached![/bold green]")
                 break
 
-            console.log(f"[cyan]Checking contract {idx + 1}/{len(contract_addresses)}: {address}[/cyan]")
+            self.console.log(f"[cyan]Checking contract {idx + 1}/{len(contract_addresses)}: {address}[/cyan]")
             contract_data = self.fetch_verified_contract(address)
 
             if contract_data:
                 self.save_contract_as_sol(address, contract_data)
                 verified_contracts_saved += 1
-                console.log(
+                self.console.log(
                     f"[green]Verified contract saved: {address} (Total saved: {verified_contracts_saved})[/green]")
             else:
-                console.log(f"[red]Skipping contract {address}, not verified or error occurred[/red]")
+                self.console.log(f"[red]Skipping contract {address}, not verified or error occurred[/red]")
 
-        console.log(f"[bold green]Finished: Saved {verified_contracts_saved} verified contracts[/bold green]")
+        self.console.log(f"[bold green]Finished: Saved {verified_contracts_saved} verified contracts[/bold green]")
         return verified_contracts_saved
