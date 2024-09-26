@@ -1,8 +1,9 @@
+import json
 import re
 import subprocess
-import json
+
 from rich.console import Console
-from rich.pretty import pretty_print  # This is used for pretty printing complex objects like JSON
+from rich.json import JSON
 
 # Initialize a rich console for pretty printing
 console = Console()
@@ -13,7 +14,7 @@ class SlitherAnalyzer:
     This class is responsible for running Slither on a given Solidity file and determining if it is vulnerable to reentrancy.
     """
 
-    def __init__(self, file_path):
+    def __init__(self, file_path: str):
         """
         Initialize the SlitherAnalyzer with the Solidity file path.
 
@@ -22,9 +23,10 @@ class SlitherAnalyzer:
         self.file_path = file_path
         self.solc_version = self.extract_solc_version()  # Automatically extract the version from the file
 
-    def extract_solc_version(self):
+    def extract_solc_version(self) -> str:
         """
         Extract the Solidity version from the file. If not found, return a default version.
+        :return: Extracted or default Solidity version.
         """
         try:
             with open(self.file_path, 'r') as file:
@@ -44,14 +46,15 @@ class SlitherAnalyzer:
             console.print(f"[bold red]Error reading Solidity file: {e}[/bold red]")
             raise
 
-    def set_solc_version(self):
+    def set_solc_version(self) -> None:
         """
         Sets the Solidity compiler version using solc-select. Installs the version if necessary.
         """
-        def run_solc_command(command, success_message, error_message):
+
+        def run_solc_command(command: list[str], success_message: str, error_message: str) -> bool:
             result = subprocess.run(command, capture_output=True, text=True)
             if result.returncode != 0:
-                console.print(f"[yellow]{error_message}: {result.stderr}[/yellow]")
+                console.print(f"[yellow]{error_message}: {result.stderr.strip()}[/yellow]")
                 return False
             console.print(f"[bold green]{success_message}[/bold green]")
             return True
@@ -60,17 +63,17 @@ class SlitherAnalyzer:
         if not run_solc_command(['solc-select', 'use', self.solc_version],
                                 f"Successfully set Solidity version to {self.solc_version}.",
                                 f"Error setting Solidity version to {self.solc_version}"):
-            # Try installing if version is not available
-            if f"'{self.solc_version}' must be installed":
-                console.print(f"[yellow]Installing Solidity version {self.solc_version}...[/yellow]")
-                if not run_solc_command(['solc-select', 'install', self.solc_version],
-                                        f"Installed Solidity version {self.solc_version}.",
-                                        f"Failed to install Solidity version {self.solc_version}"):
-                    raise Exception("Failed to install and set Solidity version.")
+            # Try installing if the version is not available
+            console.print(f"[yellow]Installing Solidity version {self.solc_version}...[/yellow]")
+            if not run_solc_command(['solc-select', 'install', self.solc_version],
+                                    f"Installed Solidity version {self.solc_version}.",
+                                    f"Failed to install Solidity version {self.solc_version}"):
+                raise Exception("Failed to install and set Solidity version.")
 
-    def run_analysis(self):
+    def run_analysis(self) -> int:
         """
         Run Slither analysis and return the result based on reentrancy detection or error code.
+        :return: 1 if reentrancy is detected, 0 if not, or -1 for errors.
         """
         try:
             self.set_solc_version()
@@ -88,7 +91,7 @@ class SlitherAnalyzer:
             if result.returncode in [0, 255]:
                 return self._parse_for_reentrancy(result.stdout, result.stderr)
 
-            console.print(f"[bold red]Slither returned code {result.returncode}: {result.stderr}[/bold red]")
+            console.print(f"[bold red]Slither returned code {result.returncode}: {result.stderr.strip()}[/bold red]")
             return -1
 
         except FileNotFoundError:
@@ -100,34 +103,27 @@ class SlitherAnalyzer:
             return -2
 
     @staticmethod
-    def _pretty_print_output(stdout, stderr):
+    def _pretty_print_output(stdout: str, stderr: str) -> None:
         """
         Pretty print stdout and stderr as JSON if possible, otherwise print them as raw output.
 
         :param stdout: Standard output from Slither.
         :param stderr: Standard error output from Slither.
         """
-        try:
-            # Attempt to parse and pretty print stdout as JSON
-            stdout_json = json.loads(stdout)
-            console.print("[bold green]Slither Output (stdout):[/bold green]")
-            pretty_print(stdout_json)
 
-        except json.JSONDecodeError:
-            console.print("[bold red]Could not parse stdout as JSON. Printing raw output:[/bold red]")
-            console.print(stdout)
+        def pretty_print_output(data: str, label: str, color: str) -> None:
+            try:
+                json_data = json.loads(data)
+                console.print(f"[bold {color}]Slither Output ({label}):[/bold {color}]")
+                console.print(JSON(json_data))
+            except json.JSONDecodeError:
+                console.print(f"[bold {color}]Could not parse {label} as JSON. Printing raw output:[/bold {color}]")
+                console.print(data)
 
-        try:
-            # Attempt to parse and pretty print stderr as JSON
-            stderr_json = json.loads(stderr)
-            console.print("[bold red]Slither Output (stderr):[/bold red]")
-            pretty_print(stderr_json)
+        pretty_print_output(stdout, "stdout", "green")
+        pretty_print_output(stderr, "stderr", "red")
 
-        except json.JSONDecodeError:
-            console.print("[bold red]Could not parse stderr as JSON. Printing raw output:[/bold red]")
-            console.print(stderr)
-
-    def _parse_for_reentrancy(self, stdout, stderr):
+    def _parse_for_reentrancy(self, stdout: str, stderr: str) -> int:
         """
         Parse Slither output for reentrancy warnings in both stdout and stderr.
 
