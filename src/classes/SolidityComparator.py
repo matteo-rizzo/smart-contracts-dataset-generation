@@ -40,7 +40,8 @@ class SolidityComparator:
                     contracts.append(os.path.join(root, file))
         return contracts
 
-    def extract_ast(self, file_path: str) -> Dict[str, Any]:
+    @staticmethod
+    def extract_ast(file_path: str) -> Dict[str, Any]:
         """
         Extract the AST of a Solidity file using Slither.
 
@@ -55,7 +56,8 @@ class SolidityComparator:
             console.print(f"[red]Error extracting AST from {file_path}: {str(e)}[/red]")
             return {}
 
-    def extract_cfg(self, file_path: str) -> List[Any]:
+    @staticmethod
+    def extract_cfg(file_path: str) -> List[Any]:
         """
         Extract the CFGs of a Solidity file using Slither.
 
@@ -78,7 +80,8 @@ class SolidityComparator:
             console.print(f"[red]Error extracting CFG from {file_path}: {str(e)}[/red]")
             return []
 
-    def ast_similarity(self, ast1: Dict[str, Any], ast2: Dict[str, Any]) -> float:
+    @staticmethod
+    def ast_similarity(ast1: Dict[str, Any], ast2: Dict[str, Any]) -> float:
         """
         Compute AST similarity using a simple string comparison.
 
@@ -90,7 +93,8 @@ class SolidityComparator:
         ast_str2 = json.dumps(ast2, sort_keys=True)
         return SequenceMatcher(None, ast_str1, ast_str2).ratio()
 
-    def cfg_similarity(self, cfg1: Any, cfg2: Any) -> float:
+    @staticmethod
+    def cfg_similarity(cfg1: Any, cfg2: Any) -> float:
         """
         Compute CFG similarity by comparing the structure of control flow graphs.
 

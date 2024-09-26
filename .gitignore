@@ -892,3 +892,4 @@ FodyWeavers.xsd
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm+all,pycharm+iml,pycharm,venv,database,macos,visualstudio,windows,linux
 /solidity_contracts/
 /kb/
+/dataset/

@@ -7,7 +7,7 @@ if __name__ == '__main__':
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Generate Solidity contract dataset with injected vulnerabilities.")
 
-    parser.add_argument('--generator_type', type=str, choices=['etherscan', 'scratch'], default='scratch',
+    parser.add_argument('--generator_type', type=str, choices=['etherscan', 'scratch'], default='etherscan',
                         help='Choose the type of dataset generator: "etherscan" to modify existing contracts, "scratch" to generate new contracts from scratch.')
     parser.add_argument('--vulnerability_type', type=str, default='reentrancy',
                         help='The type of vulnerability to inject into the contracts (e.g., reentrancy, front-running).')
