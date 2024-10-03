@@ -2,7 +2,7 @@ import os
 
 from rich.console import Console
 
-from src.classes.SolidityComparator import SolidityComparator
+from src.classes.analysis.SolidityComparator import SolidityComparator
 
 # Console for rich output
 console = Console()

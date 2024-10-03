@@ -5,7 +5,7 @@ import time
 from rich.console import Console
 from rich.table import Table
 
-from src.classes.SlitherAnalyzer import SlitherAnalyzer
+from src.classes.analysis.SlitherAnalyzer import SlitherAnalyzer
 
 # Initialize a rich console for pretty printing
 console = Console()
