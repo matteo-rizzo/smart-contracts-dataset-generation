@@ -3,14 +3,16 @@ import os
 
 from src.classes.analysis.SmartbugsRunner import SmartBugsRunner
 
-DEFAULT_CONTRACTS_FOLDER = os.path.join("..", "..", "dataset", "etherscan150")
-DEFAULT_OUTPUT_FOLDER = os.path.join("..", "..", "logs")
-DEFAULT_ANALYZERS = ["ethor", "mythril"]
+# Global variables
+DEFAULT_CONTRACTS_FOLDER = os.path.join("dataset", "etherscan150", "runtime")
+DEFAULT_OUTPUT_FOLDER = os.path.join("logs")
+DEFAULT_ANALYZERS = ["ethor"]
 DEFAULT_TIMEOUT = 300
 DEFAULT_PROCESSES = 2
 DEFAULT_MEM_LIMIT = "4g"
 DEFAULT_CPU_QUOTA = None
 DEFAULT_OUTPUT_FORMAT = "json"
+GLOBAL_RUNTIME_MODE = True
 
 if __name__ == "__main__":
     # Argument parsing
@@ -31,8 +33,13 @@ if __name__ == "__main__":
                         help=f"Optional CPU quota for each process (percentage of CPU usage). (default: {DEFAULT_CPU_QUOTA})")
     parser.add_argument('--output-format', '-f', default=DEFAULT_OUTPUT_FORMAT, choices=['json', 'sarif'],
                         help=f"Output format for the analysis results: json or sarif. (default: {DEFAULT_OUTPUT_FORMAT})")
+    parser.add_argument('--runtime', action='store_true',
+                        help="Analyze runtime bytecode instead of Solidity source files. Overrides the global setting.")
 
     args = parser.parse_args()
+
+    # Use global runtime mode unless explicitly overridden by the command-line argument
+    runtime_mode = GLOBAL_RUNTIME_MODE or args.runtime
 
     # Create the SmartBugsRunner instance with command-line arguments or defaults
     runner = SmartBugsRunner(
@@ -43,7 +50,8 @@ if __name__ == "__main__":
         processes=args.processes,
         mem_limit=args.mem_limit,
         cpu_quota=args.cpu_quota,
-        output_format=args.output_format
+        output_format=args.output_format,
+        runtime=runtime_mode  # Use the global or command-line controlled runtime mode
     )
 
     # Run the analysis

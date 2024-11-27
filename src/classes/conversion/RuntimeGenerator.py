@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from rich.progress import track
-from solcx import compile_files, install_solc, set_solc_version
+from solcx import compile_files, install_solc, set_solc_version, link_code
 
 from src.classes.conversion.FileManager import FileManager
 from src.classes.conversion.PragmaParser import PragmaParser
@@ -96,8 +96,6 @@ class RuntimeGenerator:
 
         try:
             compiled_contracts = compile_files([str(sol_file)], output_values=["bin-runtime"])
-
-            # Handle the compiled contracts and save all bytecode in a single output file
             self._handle_compiled_contracts(compiled_contracts, output_folder, sol_file)
         except Exception as e:
             self.console.print(f"[bold red]Failed to generate bytecode for {sol_file.name}: {e}[/bold red]")
@@ -118,28 +116,22 @@ class RuntimeGenerator:
 
     def _handle_compiled_contracts(self, compiled_contracts, output_folder, sol_file):
         """
-        Handles the compiled contracts, saving all runtime bytecode from the Solidity file into one output file.
+        Handles the compiled contracts, validating and saving all runtime bytecode from the Solidity file into one output file.
 
         :param compiled_contracts: Dictionary of compiled contracts and their bytecode.
         :param output_folder: Path to save the bytecode.
         :param sol_file: The original Solidity file being processed.
         """
         output_file = Path(output_folder) / f"{sol_file.stem}.hex"
-        all_bytecode = ""
+        contract, data = list(compiled_contracts.items())[-1]
+        bytecode = data.get('bin-runtime', '')
 
-        for contract, data in compiled_contracts.items():
-            bytecode = data.get('bin-runtime', '')
-
-            if bytecode:
-                # Concatenate all bytecode
-                all_bytecode += bytecode + "\n"
-
-        if all_bytecode:
-            # Save the combined bytecode to the output file
-            with open(output_file, 'w') as f:
-                f.write(all_bytecode.strip())
-
+        if not bytecode:
             self.console.print(
-                f"[bold green]All runtime bytecode saved for {sol_file.name} to {output_file}[/bold green]")
-        else:
-            self.console.print(f"[bold yellow]No bytecode generated for any contract in {sol_file.name}[/bold yellow]")
+                f"[bold yellow]No valid bytecode generated for contract {contract} in {sol_file.name}[/bold yellow]")
+
+        # Save the combined bytecode to the output file
+        with open(output_file, 'w') as f:
+            f.write(bytecode.strip())
+
+        self.console.print(f"[bold green]Runtime bytecode saved for {sol_file.name} to {output_file}[/bold green]")

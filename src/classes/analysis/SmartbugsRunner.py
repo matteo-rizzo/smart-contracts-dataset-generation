@@ -12,7 +12,7 @@ console = Console()
 class SmartBugsRunner:
     def __init__(self, contracts_folder: str, output_folder: str, analyzers: List[str], timeout: int,
                  processes: int = 1, mem_limit: str = "4g", cpu_quota: Optional[int] = None,
-                 output_format: str = "json") -> None:
+                 output_format: str = "json", runtime: bool = False) -> None:
         """
         Initialize the SmartBugsRunner with the given configuration.
 
@@ -24,6 +24,7 @@ class SmartBugsRunner:
         :param mem_limit: Memory limit for Docker containers (e.g., "4g" for 4 gigabytes)
         :param cpu_quota: CPU limit for Docker containers (optional, e.g., 100000 for 1 CPU)
         :param output_format: Format for output results (either "json" or "sarif")
+        :param runtime: Boolean indicating whether to analyze runtime bytecode instead of Solidity source code
         """
         self.contracts_folder = contracts_folder
         self.output_folder = self.create_timestamped_output_folder(output_folder)
@@ -33,6 +34,7 @@ class SmartBugsRunner:
         self.mem_limit = mem_limit
         self.cpu_quota = cpu_quota
         self.output_format = output_format
+        self.runtime = runtime
 
     @staticmethod
     def create_timestamped_output_folder(base_output_folder: str) -> str:
@@ -48,38 +50,31 @@ class SmartBugsRunner:
         console.print(f"[bold green]Created output folder: {timestamped_folder}[/bold green]")
         return timestamped_folder
 
-    def get_smart_contracts(self) -> List[str]:
+    def run_smartbugs_subprocess(self, analyzer: str) -> None:
         """
-        Collect all Solidity (.sol) and bytecode (.hex) files from the contracts folder.
-
-        :return: List of smart contract file paths to be analyzed
-        """
-        contracts = [os.path.join(self.contracts_folder, file) for file in os.listdir(self.contracts_folder)
-                     if file.endswith(".sol") or file.endswith(".hex")]
-        if not contracts:
-            console.print(f"[bold red]No smart contract files found in {self.contracts_folder}.[/bold red]")
-            return []
-        console.print(f"[bold green]Found {len(contracts)} contract(s) to analyze.[/bold green]")
-        return contracts
-
-    def run_smartbugs_subprocess(self, analyzer: str, contract_files: List[str]) -> None:
-        """
-        Run SmartBugs as a subprocess with the given analyzer and contract files.
+        Run SmartBugs as a subprocess with the given analyzer on all files in the contracts folder.
 
         :param analyzer: The analysis tool to use (e.g., mythril, slither)
-        :param contract_files: List of contract files to analyze
         """
         try:
+            # Use "*.sol" for source code and "*.hex" for runtime bytecode
+            file_extension = "*.hex" if self.runtime else "*.sol"
+            contract_files_pattern = os.path.join(self.contracts_folder, file_extension)
+
             # Construct the SmartBugs command
             command = [
                 "/Users/matteorizzo/bin/smartbugs/smartbugs",  # Path to the SmartBugs executable
                 "-t", analyzer,  # Tool to be used for the analysis
-                "-f", ",".join(contract_files),  # Files to analyze (comma-separated)
+                "-f", contract_files_pattern,  # File pattern (e.g., samples/*.sol or samples/*.hex)
                 "--processes", str(self.processes),  # Number of processes to run in parallel
                 "--timeout", str(self.timeout),  # Timeout for each task
                 "--mem-limit", self.mem_limit,  # Memory limit for Docker containers
                 "--results", self.output_folder  # Output folder for the results
             ]
+
+            # If the runtime flag is enabled, add the runtime option
+            if self.runtime:
+                command.append("--runtime")
 
             # Append options for output format and CPU quota if needed
             if self.output_format == "sarif":
@@ -102,20 +97,14 @@ class SmartBugsRunner:
                 console.print(f"[red]SmartBugs errors:[/red]\n{result.stderr}")
 
         except Exception as e:
-            console.print(f"[bold red]Error running SmartBugs for {contract_files} with {analyzer}: {e}[/bold red]")
+            console.print(f"[bold red]Error running SmartBugs with {analyzer}: {e}[/bold red]")
 
     def run(self) -> None:
         """
-        Main function to execute the SmartBugs analysis on the collected smart contracts.
+        Main function to execute the SmartBugs analysis on the whole folder.
         """
-        contracts = self.get_smart_contracts()
-        if not contracts:
-            return
-
-        # For each contract and analyzer, run the analysis
-        for contract in contracts:
-            console.print(Panel(f"[cyan]Analyzing contract: {contract}[/cyan]", expand=False))
-            for analyzer in self.analyzers:
-                self.run_smartbugs_subprocess(analyzer, [contract])
+        # Run the analysis for all contracts in the folder for each analyzer
+        for analyzer in self.analyzers:
+            self.run_smartbugs_subprocess(analyzer)
 
         console.print(f"[bold green]Analysis completed! Results stored in {self.output_folder}[/bold green]")
