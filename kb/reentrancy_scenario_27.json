@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy via Contract Creation",
+    "scenario": "Contracts that create other contracts during execution.",
+    "example": "function createContract(bytes memory bytecode) public {\n    address newContract;\n    assembly {\n        newContract := create(0, add(bytecode, 0x20), mload(bytecode))\n    }\n    // Update state\n}",
+    "issue": "If the new contract's constructor calls back into the original contract, reentrancy can occur."
+}

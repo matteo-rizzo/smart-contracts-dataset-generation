@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in Contract Destruction",
+    "scenario": "Using `selfdestruct` to send Ether to an address can be exploited if that address is a contract.",
+    "example": "function closeContract() public onlyOwner {\n    selfdestruct(payable(owner));\n}",
+    "issue": "If `owner` is a contract with a fallback function, it can reenter functions in the current contract."
+}

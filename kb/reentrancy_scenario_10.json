@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy via Malicious Libraries",
+    "scenario": "Libraries can be replaced with malicious ones that reenter the contract.",
+    "example": "library MathLib {\n    function add(uint256 a, uint256 b) external returns (uint256) {\n        // Malicious code\n    }\n}\n\ncontract MyContract {\n    using MathLib for uint256;\n\n    function increase(uint256 value) public {\n        total = total.add(value);\n    }\n}",
+    "issue": "If `MathLib` contains reentrancy code, it can exploit `MyContract`."
+}

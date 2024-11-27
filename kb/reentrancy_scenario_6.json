@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy via Callbacks in ERC777 Tokens",
+    "scenario": "ERC777 tokens have a `tokensReceived` hook that can be exploited to reenter a contract during a token transfer.",
+    "example": "function buyTokens(address token, uint256 amount) public {\n    IERC777(token).operatorSend(msg.sender, address(this), amount, \"\", \"\");\n    balances[msg.sender] += amount;\n}",
+    "issue": "The `tokensReceived` hook can be used by an attacker to call back into `buyTokens` before `balances` is updated."
+}

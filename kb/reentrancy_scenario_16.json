@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in DeFi Protocols",
+    "scenario": "Complex financial interactions involving lending, borrowing, or liquidity pools can be exploited.",
+    "example": "function borrow(uint256 amount) public {\n    require(collateral[msg.sender] >= amount, \"Insufficient collateral\");\n    (bool success, ) = msg.sender.call{value: amount}(\"\");\n    require(success, \"Transfer failed\");\n    loans[msg.sender] += amount;\n}",
+    "issue": "An attacker can reenter `borrow` to manipulate loan amounts."
+}

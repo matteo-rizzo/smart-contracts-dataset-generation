@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy via Oracle Callbacks",
+    "scenario": "Oracles that call back into contracts can be exploited.",
+    "example": "function requestPriceData() public {\n    oracle.requestData();\n}\n\nfunction receiveData(uint256 price) public {\n    require(msg.sender == address(oracle), \"Unauthorized\");\n    // Update price\n}",
+    "issue": "If the oracle is compromised, it can reenter the contract during the callback."
+}

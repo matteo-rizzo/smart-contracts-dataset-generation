@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in Modifiers",
+    "scenario": "Modifiers that perform external calls can be reentered.",
+    "example": "modifier onlyVerified() {\n    require(verify(msg.sender), \"Not verified\");\n    _;\n}\n\nfunction sensitiveAction() public onlyVerified {\n    // Critical code\n}\n\nfunction verify(address user) internal returns (bool) {\n    (bool success, ) = verifierContract.call(abi.encodeWithSignature(\"isVerified(address)\", user));\n    return success;\n}",
+    "issue": "If `verifierContract` is malicious, it can reenter `sensitiveAction`."
+}

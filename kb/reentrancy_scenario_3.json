@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy via Fallback Functions",
+    "scenario": "A contract receives Ether and its `fallback` or `receive` function is triggered, which then calls back into the original contract.",
+    "example": "receive() external payable {\n    someContract.doSomething();\n}",
+    "issue": "If `doSomething` interacts with the original contract, it can lead to reentrancy."
+}

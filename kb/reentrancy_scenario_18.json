@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in Token Contracts",
+    "scenario": "ERC20 or ERC721 contracts that allow external calls during token transfers.",
+    "example": "function transfer(address to, uint256 amount) public {\n    balances[msg.sender] -= amount;\n    balances[to] += amount;\n    // External call\n    TokenRecipient(to).tokensReceived(msg.sender, amount);\n}",
+    "issue": "`TokenRecipient` can reenter `transfer`."
+}

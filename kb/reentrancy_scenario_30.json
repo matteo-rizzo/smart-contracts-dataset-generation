@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in Access Control",
+    "scenario": "Contracts that update access control variables after external calls.",
+    "example": "function grantAccess(address user) public onlyOwner {\n    (bool success, ) = user.call(\"\");\n    require(success, \"Call failed\");\n    accessGranted[user] = true;\n}",
+    "issue": "The user can reenter `grantAccess` before `accessGranted` is set."
+}

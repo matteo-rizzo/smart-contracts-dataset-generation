@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy via Batch Operations",
+    "scenario": "Functions that perform multiple operations without proper state updates.",
+    "example": "function batchTransfer(address[] memory recipients, uint256[] memory amounts) public {\n    for (uint256 i = 0; i < recipients.length; i++) {\n        transfer(recipients[i], amounts[i]);\n    }\n}",
+    "issue": "If `transfer` is reentrant, `batchTransfer` can be exploited."
+}

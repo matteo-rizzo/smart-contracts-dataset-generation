@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy with Delegatecall",
+    "scenario": "Using `delegatecall` to execute code from another contract within the context of the calling contract can introduce reentrancy.",
+    "example": "function execute(address callee, bytes memory data) public {\n    (bool success, ) = callee.delegatecall(data);\n    require(success, \"Delegatecall failed\");\n}",
+    "issue": "If `callee` contains malicious code that reenters the original contract, it can manipulate its state."
+}

@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in Staking Contracts",
+    "scenario": "Contracts that allow staking and withdrawing rewards can be vulnerable.",
+    "example": "function withdrawRewards() public {\n    uint256 reward = calculateReward(msg.sender);\n    (bool success, ) = msg.sender.call{value: reward}(\"\");\n    require(success, \"Transfer failed\");\n    rewards[msg.sender] = 0;\n}",
+    "issue": "Reentrancy can occur if `rewards` is not updated before the external call."
+}

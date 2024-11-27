@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in Auctions",
+    "scenario": "Auctions that refund the previous highest bidder before updating the highest bid can be exploited.",
+    "example": "function bid() public payable {\n    require(msg.value > highestBid, \"Bid too low\");\n    if (highestBidder != address(0)) {\n        (bool success, ) = highestBidder.call{value: highestBid}(\"\");\n        require(success, \"Refund failed\");\n    }\n    highestBid = msg.value;\n    highestBidder = msg.sender;\n}",
+    "issue": "The previous bidder can reenter `bid` during the refund."
+}

@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in Self-Referential Calls",
+    "scenario": "Contracts that call themselves can be reentered.",
+    "example": "function recursiveFunction(uint256 depth) public {\n    if (depth > 0) {\n        this.recursiveFunction(depth - 1);\n    }\n    // Update state\n}",
+    "issue": "An attacker can manipulate the depth to exhaust gas or reenter state updates."
+}

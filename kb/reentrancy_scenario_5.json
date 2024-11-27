@@ -1,0 +1,6 @@
+{
+    "name": "Reentrancy in Loop Structures",
+    "scenario": "Functions that process multiple transactions in a loop and make external calls can be reentered.",
+    "example": "function batchSend(address[] memory recipients, uint256 amount) public {\n    for (uint256 i = 0; i < recipients.length; i++) {\n        (bool success, ) = recipients[i].call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n    }\n}",
+    "issue": "If a recipient is an attacker-controlled contract, it can reenter `batchSend` during the loop."
+}
