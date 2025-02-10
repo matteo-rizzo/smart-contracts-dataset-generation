@@ -1,6 +1,6 @@
 {
-    "name": "Single-Function Reentrancy (Classic Reentrancy)",
-    "scenario": "An attacker reenters the same function multiple times before the first invocation completes, exploiting the contract's state before it's updated.",
-    "example": "function withdraw(uint256 amount) public {\n    require(balances[msg.sender] >= amount, \"Insufficient balance\");\n    (bool success, ) = msg.sender.call{value: amount}(\"\");\n    require(success, \"Transfer failed\");\n    balances[msg.sender] -= amount;\n}",
-    "issue": "The contract sends Ether before updating the user's balance. An attacker can reenter `withdraw` during the external call, withdrawing funds multiple times."
+  "name": "Single-Function Reentrancy - Decreasing balance",
+  "scenario": "An attacker reenters the same function multiple times before the first invocation completes, exploiting the contract's state before it's updated.",
+  "example": "contract C {\n    mapping ( address => uint256 ) private balances;\n    // other fields may appear here\n\n    function withdraw(uint256 amount) public {\n        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n        (bool success, ) = msg.sender.call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n        balances[msg.sender] -= amount;\n    }\n}",
+  "issue": "The contract sends Ether before updating the user's balance. An attacker can reenter `withdraw` during the external call, withdrawing funds multiple times."
 }

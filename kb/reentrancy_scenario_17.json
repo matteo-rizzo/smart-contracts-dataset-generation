@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy via Front-Running",
-    "scenario": "Attackers front-run transactions to exploit timing vulnerabilities.",
-    "example": "function setPrice(uint256 newPrice) public onlyOwner {\n    price = newPrice;\n}\n\nfunction buy() public payable {\n    require(msg.value >= price, \"Insufficient payment\");\n    // Transfer asset\n}",
-    "issue": "An attacker can front-run `setPrice` and reenter `buy` at the old price."
-}

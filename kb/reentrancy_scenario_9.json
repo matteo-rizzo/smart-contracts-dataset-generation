@@ -1,6 +1,6 @@
 {
-    "name": "Reentrancy in Contract Destruction",
-    "scenario": "Using `selfdestruct` to send Ether to an address can be exploited if that address is a contract.",
-    "example": "function closeContract() public onlyOwner {\n    selfdestruct(payable(owner));\n}",
-    "issue": "If `owner` is a contract with a fallback function, it can reenter functions in the current contract."
+  "name": "Cross-function Reentrancy via Callbacks in ERC777 Tokens",
+  "scenario": "In the code above, users can swap token A for B (and vice versa) and be rewarded with governance tokens. However the contract (tries) to limit them to swapping every 24 hours so that the governance tokens aren’t minted out too fast.",
+  "example": "contract CrossFunctionReentrancyVulnerable {\n\n    // don't allow people to swap more than once every 24 hours\n    mapping(address => uint256) public lastSwap;\n\n    function swapAForB() {\n        require(block.timestamp - lastSwap[msg.sender] >= 1 days);\n        governanceTokenERC20.mint(msg.sender, AMOUNT);\n        tokenAerc777.transferFrom(msg.sender, address(this));\n        tokenBerc777.transferFrom(address(this), msg.sender);\n        lastSwap[msg.sender] = block.timestamp;\n    }\n\n    function swapBForA() {\n        require(block.timestamp - lastSwap[msg.sender] >= 1 days);\n        governanceTokenERC20.mint(msg.sender, AMOUNT);\n        tokenBerc777.transferFrom(msg.sender, address(this));\n        tokenAerc777.transferFrom(address(this), msg.sender);\n        lastSwap[msg.sender] = block.timestamp;\n    }\n}",
+  "issue": "ERC777 tokens can be reentrant as noted earlier, but doing a simple reentrancy on one function won’t work because the attacker will run out of tokenA or tokenB. However, if the attacker repeatedly swaps A for B, then they can mint out all the governance tokens for themselves. In this case, we have made the governance token an ERC20 token so the attacker cannot reenter into the same function. However, when transferFrom(address(this), msg.sender) is executed, the attacker gains control before the lastSwap mapping is updated."
 }

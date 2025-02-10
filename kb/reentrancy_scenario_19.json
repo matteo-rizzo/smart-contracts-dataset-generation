@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy via Initialization Functions",
-    "scenario": "Contracts with initialization functions that are not properly secured.",
-    "example": "function initialize() public {\n    require(!initialized, \"Already initialized\");\n    initialized = true;\n    owner = msg.sender;\n}",
-    "issue": "If `initialize` makes external calls, an attacker can reenter before `initialized` is set."
-}

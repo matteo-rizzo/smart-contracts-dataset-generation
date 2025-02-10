@@ -1,6 +1,6 @@
 {
-    "name": "Reentrancy in Modifiers",
-    "scenario": "Modifiers that perform external calls can be reentered.",
-    "example": "modifier onlyVerified() {\n    require(verify(msg.sender), \"Not verified\");\n    _;\n}\n\nfunction sensitiveAction() public onlyVerified {\n    // Critical code\n}\n\nfunction verify(address user) internal returns (bool) {\n    (bool success, ) = verifierContract.call(abi.encodeWithSignature(\"isVerified(address)\", user));\n    return success;\n}",
-    "issue": "If `verifierContract` is malicious, it can reenter `sensitiveAction`."
+  "name": "Reentrancy via Callbacks in ERC721 Tokens - Sample 1",
+  "scenario": "ERC721 tokens have a `onERC721Received` hook that can be exploited to reenter a contract during a token transfer.",
+  "example": "contract SomeNFT is ERC721, ERC721Enumerable {\n\n  uint256 private counter;\n  mapping (address => bool) minted;\n\n  constructor() ERC721(\"SomeNFT\", \"SNFT\") {}\n\n  function mint() external payable {\n    if (minted[msg.sender]) { revert OnlyOnePerAccount(); }\n    if (totalSupply == 10) { revert NoMoreTokens(); }\n    uint256 tokenId = counter;\n    counter++;\n    _safeMint(msg.sender, tokenId);\n    minted[msg.sender] = true;\n  }\n}",
+  "issue": "The `onERC721Received` hook can be used by an attacker to call back into `mint` before the boolean flag is updated."
 }

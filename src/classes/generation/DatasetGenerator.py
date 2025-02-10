@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 from src.classes.OpenAIClient import OpenAIClient
+from src.classes.config.OpenAIConfig import OpenAIConfig
 from src.classes.generation.VulnerabilityScenarioReader import VulnerabilityScenarioReader
 
 
@@ -56,7 +57,7 @@ class DatasetGenerator(abc.ABC):
         self.vulnerability_scenarios = self.scenario_reader.read_scenarios()
 
         # Initialize the OpenAI client
-        self.openai_client = OpenAIClient()
+        self.openai_client = OpenAIClient(OpenAIConfig())
 
     @abc.abstractmethod
     def generate_dataset(self) -> None:

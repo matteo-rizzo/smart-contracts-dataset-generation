@@ -1,6 +1,6 @@
 {
-    "name": "Reentrancy via Fallback Functions",
-    "scenario": "A contract receives Ether and its `fallback` or `receive` function is triggered, which then calls back into the original contract.",
-    "example": "receive() external payable {\n    someContract.doSomething();\n}",
-    "issue": "If `doSomething` interacts with the original contract, it can lead to reentrancy."
+  "name": "Cross-Function Reentrancy - Openzeppelin modifier",
+  "scenario": "An attacker reenters a function different from the one initially called manipulating shared state variables.",
+  "example": "import \"openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol\"\n\ncontract C {\n    mapping ( address => uint256 ) private balances;\n\n    function transfer(address to, uint256 amount) public {\n        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n        balances[to] += amount;\n        balances[msg.sender] -= amount;\n    }\n    \n    function withdrawAll() public nonReentrant {\n        uint256 amount = balances[msg.sender];\n        require(amount > 0, \"No funds\");\n        (bool success, ) = msg.sender.call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n        balances[msg.sender] = 0;\n    }\n}",
+  "issue": "During `withdrawAll`, an attacker can call `deposit` or `transfer`, manipulating balances before the original function completes."
 }

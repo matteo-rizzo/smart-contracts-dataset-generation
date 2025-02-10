@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy via Gas Limit Manipulation",
-    "scenario": "Attackers manipulate gas limits to bypass checks or cause reentrancy.",
-    "example": "function safeTransfer(address to, uint256 amount) public {\n    (bool success, ) = to.call{value: amount, gas: 2300}(\"\");\n    require(success, \"Transfer failed\");\n}",
-    "issue": "Gas forwarding can be manipulated, allowing reentrancy."
-}

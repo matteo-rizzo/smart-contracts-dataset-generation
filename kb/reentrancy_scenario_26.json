@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy in Voting Contracts",
-    "scenario": "Voting systems that allow state changes during external calls.",
-    "example": "function vote(uint256 proposalId) public {\n    proposals[proposalId].votes += 1;\n    (bool success, ) = msg.sender.call(\"\");\n    require(success, \"Call failed\");\n}",
-    "issue": "An attacker can reenter `vote` to cast multiple votes."
-}

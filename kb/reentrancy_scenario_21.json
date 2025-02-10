@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy via Upgradeable Contracts",
-    "scenario": "Proxy patterns where the implementation contract can be swapped can introduce vulnerabilities.",
-    "example": "contract Proxy {\n    address public implementation;\n\n    function upgrade(address newImplementation) public onlyOwner {\n        implementation = newImplementation;\n    }\n\n    fallback() external payable {\n        (bool success, ) = implementation.delegatecall(msg.data);\n        require(success);\n    }\n}",
-    "issue": "If `newImplementation` has reentrancy issues, the proxy inherits them."
-}

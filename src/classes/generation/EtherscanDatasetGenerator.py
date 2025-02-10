@@ -56,11 +56,15 @@ class EtherscanDatasetGenerator(DatasetGenerator):
         prompt = f"""
         You are a Solidity smart contract security expert with a deep understanding of both secure and insecure patterns in smart contract development. 
         The following is a Solidity smart contract, which is functioning correctly and securely in its current state:
-
+        
+        ### INPUT CONTRACT
+        
         {contract_code}
 
         Your task is to subtly modify this contract by injecting a specific vulnerability based on the provided {self.vulnerability_type} scenario. The details of the vulnerability and its relevant scenario are described below:
-
+        
+        # VULNERABILITY SCENARIO
+        
         {scenario_text}
 
         Here are the exact requirements for injecting the vulnerability:

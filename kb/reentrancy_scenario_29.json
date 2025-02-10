@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy via Dynamic Contract Addresses",
-    "scenario": "Contracts that interact with addresses provided by users.",
-    "example": "function interactWith(address target) public {\n    (bool success, ) = target.call(\"\");\n    require(success, \"Interaction failed\");\n}",
-    "issue": "If `target` is malicious, it can reenter the contract."
-}

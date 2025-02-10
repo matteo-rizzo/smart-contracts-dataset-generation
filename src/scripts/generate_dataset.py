@@ -11,7 +11,7 @@ if __name__ == '__main__':
                         help='Choose the type of dataset generator: "etherscan" to modify existing contracts, "scratch" to generate new contracts from scratch.')
     parser.add_argument('--vulnerability_type', type=str, default='reentrancy',
                         help='The type of vulnerability to inject into the contracts (e.g., reentrancy, front-running).')
-    parser.add_argument('--contracts_dir', type=str, default='solidity_contracts',
+    parser.add_argument('--contracts_dir', type=str, default='solidity_contracts/reentrancy_study_safe_200',
                         help='Directory containing Solidity contracts. (Only used for "etherscan" generator type).')
     parser.add_argument('--scenarios_dir', type=str, default='kb',
                         help='Directory containing scenario JSON files.')

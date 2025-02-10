@@ -1,6 +1,6 @@
 {
-    "name": "Cross-Function Reentrancy",
-    "scenario": "An attacker reenters a different function than the one initially called, manipulating shared state variables.",
-    "example": "function deposit() public payable {\n    balances[msg.sender] += msg.value;\n}\n\nfunction transfer(address to, uint256 amount) public {\n    require(balances[msg.sender] >= amount, \"Insufficient balance\");\n    balances[to] += amount;\n    balances[msg.sender] -= amount;\n}\n\nfunction withdrawAll() public {\n    uint256 amount = balances[msg.sender];\n    require(amount > 0, \"No funds\");\n    (bool success, ) = msg.sender.call{value: amount}(\"\");\n    require(success, \"Transfer failed\");\n    balances[msg.sender] = 0;\n}",
-    "issue": "During `withdrawAll`, an attacker can call `deposit` or `transfer`, manipulating balances before the original function completes."
+  "name": "Single-Function Reentrancy - Zero balance",
+  "scenario": "An attacker reenters the same function multiple times before the first invocation completes, exploiting the contract's state before it's updated.",
+  "example": "contract C {\n    mapping ( address => uint256 ) private balances;\n    // other fields may appear here\n\n    function withdraw() public {\n        uint256 amount = balances[msg. sender];\n        require (amount > 0, \"No funds\");\n        (bool success, ) = msg.sender.call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n        balances[msg.sender] = 0;\n    }\n}",
+  "issue": "The contract sends Ether before updating the user's balance. An attacker can reenter `withdraw` during the external call, withdrawing funds multiple times."
 }

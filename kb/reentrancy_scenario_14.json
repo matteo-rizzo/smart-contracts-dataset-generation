@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy in Cross-Contract Interactions",
-    "scenario": "Interacting with multiple contracts that call back into each other.",
-    "example": "contract A {\n    function callB(address bAddress) public {\n        B(bAddress).doSomething();\n        // Update state\n    }\n}\n\ncontract B {\n    function doSomething() public {\n        A(msg.sender).callback();\n    }\n}",
-    "issue": "Circular calls can lead to reentrancy."
-}

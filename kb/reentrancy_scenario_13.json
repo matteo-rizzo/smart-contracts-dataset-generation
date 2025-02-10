@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy via Emergency Functions",
-    "scenario": "Emergency functions that perform external calls can be exploited.",
-    "example": "function emergencyWithdraw() public onlyOwner {\n    (bool success, ) = msg.sender.call{value: address(this).balance}(\"\");\n    require(success, \"Withdraw failed\");\n}",
-    "issue": "If `msg.sender` is a contract, it can reenter the contract during withdrawal."
-}

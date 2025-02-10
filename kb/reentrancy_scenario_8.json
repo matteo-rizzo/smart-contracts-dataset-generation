@@ -1,6 +1,6 @@
 {
-    "name": "Reentrancy via External Contract Calls",
-    "scenario": "Calling external contracts that are untrusted can introduce reentrancy.",
-    "example": "function interact(address externalContract) public {\n    externalContract.call(abi.encodeWithSignature(\"doSomething()\"));\n    stateVariable = newValue;\n}",
-    "issue": "If `externalContract` reenters `interact`, it can manipulate `stateVariable`."
+  "name": "Reentrancy via Callbacks in ERC721 Tokens - Sample 2",
+  "scenario": "ERC721 tokens have a `onERC721Received` hook that can be exploited to reenter a contract during a token transfer.",
+  "example": "contract FooToken is ERC721 {\n\n    function mint() external payable {\n        require(msg.value == 0.1 ether);\n        require(!alreadyMinted[msg.sender]);\n\n        totalSupply++;\n        _safeMint(msg.sender, totalSupply);\n        alreadyMinted[msg.sender] = true;\n    }\n}",
+  "issue": "The `onERC721Received` hook can be used by an attacker to call back into `mint` before the boolean flag is updated."
 }

@@ -1,6 +1,6 @@
 {
-    "name": "Reentrancy with Delegatecall",
-    "scenario": "Using `delegatecall` to execute code from another contract within the context of the calling contract can introduce reentrancy.",
-    "example": "function execute(address callee, bytes memory data) public {\n    (bool success, ) = callee.delegatecall(data);\n    require(success, \"Delegatecall failed\");\n}",
-    "issue": "If `callee` contains malicious code that reenters the original contract, it can manipulate its state."
+  "name": "Cross-Function Reentrancy - Hand-written modifier",
+  "scenario": "An attacker reenters a different function than the one initially called, manipulating shared state variables.",
+  "example": "contract C {\n    bool private entered = false;\n    mapping ( address => uint256 ) private balances;\n\n    modifier nonReentrant() private {\n        require(!entered, \"Reentracy detected\");\n        entered = true;\n        _;\n        entered = false;\n    }\n    \n    function transfer(address to, uint256 amount) public {\n        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n        balances[to] += amount;\n        balances[msg.sender] -= amount;\n    }\n    \n    function withdrawAll() public nonReentrant {\n        uint256 amount = balances[msg.sender];\n        require(amount > 0, \"No funds\");\n        (bool success, ) = msg.sender.call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n        balances[msg.sender] = 0;\n    }\n}",
+  "issue": "During `withdrawAll`, an attacker can call `deposit` or `transfer`, manipulating balances before the original function completes."
 }

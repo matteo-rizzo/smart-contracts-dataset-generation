@@ -1,6 +1,6 @@
 {
-    "name": "Reentrancy via Callbacks in ERC777 Tokens",
-    "scenario": "ERC777 tokens have a `tokensReceived` hook that can be exploited to reenter a contract during a token transfer.",
-    "example": "function buyTokens(address token, uint256 amount) public {\n    IERC777(token).operatorSend(msg.sender, address(this), amount, \"\", \"\");\n    balances[msg.sender] += amount;\n}",
-    "issue": "The `tokensReceived` hook can be used by an attacker to call back into `buyTokens` before `balances` is updated."
+  "name": "Reentrancy in Loops",
+  "scenario": "Functions that process multiple transactions in a loop and make external calls can be reentered.",
+  "example": "contract C {\n    function batchSend(address[] memory recipients, uint256 amount) public {\n        for (uint256 i = 0; i < recipients.length; i++) {\n            (bool success, ) = recipients[i].call{value: amount}(\"\");\n            require(success, \"Transfer failed\");\n        }\n    }\n}",
+  "issue": "If a recipient is an attacker-controlled contract, it can reenter `batchSend` during the loop. We do not need side-effects after the call when a loop is involved."
 }

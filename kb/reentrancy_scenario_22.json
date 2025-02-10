@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy in Lottery Contracts",
-    "scenario": "Lotteries that send Ether to winners before updating state.",
-    "example": "function drawWinner() public onlyOwner {\n    uint256 winnerIndex = random() % participants.length;\n    address winner = participants[winnerIndex];\n    (bool success, ) = winner.call{value: prize}(\"\");\n    require(success, \"Transfer failed\");\n    prizeDistributed = true;\n}",
-    "issue": "The winner can reenter `drawWinner` before `prizeDistributed` is set."
-}

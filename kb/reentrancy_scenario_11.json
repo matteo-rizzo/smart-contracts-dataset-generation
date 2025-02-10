@@ -1,6 +1,0 @@
-{
-    "name": "Reentrancy in Payment Splitting",
-    "scenario": "Splitting payments among multiple parties can be exploited via reentrancy.",
-    "example": "function splitPayment(address[] memory recipients) public payable {\n    uint256 share = msg.value / recipients.length;\n    for (uint256 i = 0; i < recipients.length; i++) {\n        (bool success, ) = recipients[i].call{value: share}(\"\");\n        require(success, \"Transfer failed\");\n    }\n}",
-    "issue": "A recipient can reenter `splitPayment`, causing incorrect distribution."
-}
