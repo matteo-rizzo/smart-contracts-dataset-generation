@@ -8,3 +8,4 @@ slither~=0.3.0
 slither-analyzer
 pyyaml
 py-solc-x
+web3~=6.20.3

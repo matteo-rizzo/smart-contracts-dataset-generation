@@ -1,14 +1,24 @@
 import argparse
 import os
 import time
+import re
 from pathlib import Path
 
 from rich import print
 from rich.progress import Progress
 
 # Predefined input and output directories
-INPUT_DIR = os.path.join("dataset", "etherscan150", "source")
-OUTPUT_DIR = os.path.join("logs", f"etherscan150_split_{time.time()}", "source")
+INPUT_DIR = os.path.join("base_contracts", "etherscan_dump_1000")
+OUTPUT_DIR = os.path.join("logs", f"etherscan_dump_1000_split_{time.time()}")
+
+# Regex pattern to extract the Solidity version from pragma statements
+PRAGMA_PATTERN = re.compile(r"pragma solidity (\d+\.\d+\.\d+|\d+\.\d+);")
+
+
+def extract_pragma_version(content):
+    """Extracts the Solidity version from a pragma statement."""
+    match = PRAGMA_PATTERN.search(content)
+    return match.group(1) if match else None
 
 
 def split_solidity_files_by_pragma(source_folder, output_folder):
@@ -45,6 +55,14 @@ def split_solidity_files_by_pragma(source_folder, output_folder):
             for i, start_idx in enumerate(pragma_indices):
                 end_idx = pragma_indices[i + 1] if i + 1 < len(pragma_indices) else len(lines)
                 new_file_content = ''.join(lines[start_idx:end_idx])
+
+                # Extract pragma version
+                pragma_version = extract_pragma_version(new_file_content)
+
+                if not pragma_version or not pragma_version.startswith("0.8."):
+                    print(
+                        f"[yellow]Skipping split {i + 1} of {sol_file.name} (pragma version {pragma_version} not 0.8.*).[/yellow]")
+                    continue
 
                 # Skip splits containing 'interface' or 'library'
                 if "interface" in new_file_content or "library" in new_file_content:
