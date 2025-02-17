@@ -46,9 +46,11 @@ class EtherscanFetcher:
         """
         Fetch the verified source code of a contract.
 
+        Skips the contract if the compiler version is lower than 0.8.*
+
         :param contract_address: The contract address to query.
         :param retry_count: Current retry count (used internally).
-        :return: Contract data if verified and available, else None.
+        :return: Contract data if verified, available, and has a compatible compiler version; else None.
         """
         try:
             self.rate_limiter.rate_limit()
@@ -64,6 +66,13 @@ class EtherscanFetcher:
             status = str(data.get('status', '0'))
             result = data.get('result', [])
             if status in ['1', "True", "OK"] and result and result[0].get('SourceCode'):
+                compiler_version = result[0].get('CompilerVersion', '')
+                # Check if the compiler version starts with "0.8." or "v0.8."
+                if not (compiler_version.startswith("0.8.") or compiler_version.startswith("v0.8.")):
+                    self.console.log(
+                        f"[yellow]Skipping {contract_address}: Compiler version {compiler_version} is lower than 0.8.*.[/yellow]"
+                    )
+                    return None
                 self.console.log(f"[green]Contract verified for address: {contract_address}[/green]")
                 return result[0]
             else:

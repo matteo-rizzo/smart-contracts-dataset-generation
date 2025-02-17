@@ -9,3 +9,4 @@ slither-analyzer
 pyyaml
 py-solc-x
 web3~=6.20.3
+pandas~=2.2.3
