@@ -70,13 +70,13 @@ class EtherscanDatasetGenerator(DatasetGenerator):
         Here are the exact requirements for injecting the vulnerability:
         1. **Vulnerability Injection**: Modify the provided contract code by introducing the {self.vulnerability_type} vulnerability. This modification must adhere strictly to the scenario described above.
            - The vulnerability should not be placed in obvious spots, such as where sensitive operations already exist. Instead, it should be subtly integrated into areas where it is less likely to be immediately detected.
-           - Do not use obvious variable names, function names, or comments that could hint at the presence of the vulnerability. Ensure that the vulnerability is concealed within the logic of the contract, blending with existing functionality.
+           - Do not use obvious variable names or function names that could hint at the presence of the vulnerability. Ensure that the vulnerability is concealed within the logic of the contract, blending with existing functionality.
 
         2. **Method Modifications Only**: You are only allowed to modify existing methods in the contract. Do not add new methods, variables, or libraries unless they are absolutely necessary for the vulnerability itself. Focus on modifying existing logic to reflect the vulnerability without introducing obvious changes.
 
         3. **Retain Core Functionality**: Ensure that the contract retains its original functionality despite the vulnerability being injected. The contract logic must remain intact, with the vulnerability subtly integrated into existing methods without breaking or altering core functionality.
 
-        4. **Avoid Detection**: The injected vulnerability should be hidden within the contract’s flow. Avoid leaving traces such as unnecessary changes, comments, or obvious indicators that would make the vulnerability easy to spot during a casual review.
+        4. **Detection**: The injected vulnerability should be hidden within the contract’s flow. Avoid leaving traces such as unnecessary changes or obvious indicators that would make the vulnerability easy to spot but add a single comment in capslock indicating where the vulnerability is located.
 
         5. **Compilation**: The modified contract must compile successfully with no syntax or structural errors. Ensure that the code is valid Solidity, capable of being deployed on a blockchain.
 

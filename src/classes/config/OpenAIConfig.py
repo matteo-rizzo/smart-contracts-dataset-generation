@@ -18,7 +18,7 @@ class OpenAIConfig:
         if not self.api_key:
             raise ValueError("OpenAI API key not found. Please set OPENAI_API_KEY in your .env file.")
 
-        self.model = os.getenv('OPENAI_MODEL', 'gpt-4o')  # Default model if not set in .env
+        self.model = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')  # Default model if not set in .env
         self.logger = self.setup_logging()
 
     @staticmethod
